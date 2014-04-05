@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block body %}
+    <ul>
+    {% for recipe in recipes %}
+        <li><a href="/recipe/{{ recipe.guid|safe }}/">{{ recipe.title|safe }}</a></li>
+    {% else %}
+        <li><em>Unbelievable. No recipes here so far</em></li>
+    {% endfor %}
+    </ul>
+{% endblock %}
