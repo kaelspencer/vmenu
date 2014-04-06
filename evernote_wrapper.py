@@ -1,20 +1,19 @@
 from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
-import binascii
-import re
+import binascii, re, urllib, urllib2
 from vmenu import app
 
 # Get all of the tags used in the default notebook.
 def get_tags():
-    notestore = get_notestore()
-    notebook = get_notebook(get_notestore(), app.config['NOTEBOOK'])
+    notestore = get_client().get_note_store()
+    notebook = get_notebook(notestore, app.config['NOTEBOOK'])
     tags = notestore.listTagsByNotebook(notebook.guid)
     return tags
 
 # Get all of the notes that are tagged with the provided tag in the default notebook.
 # Tag is a guid.
 def get_recipes(tag):
-    notestore = get_notestore()
+    notestore = get_client().get_note_store()
     notebook = get_notebook(notestore, app.config['NOTEBOOK'])
 
     tag_guids = [tag]
@@ -28,17 +27,19 @@ def get_recipes(tag):
 
     for n in notes:
         results.append(notestore.getNote(n.guid, False, False, False, False))
+        get_thumbnail(n.guid)
 
     return results
 
 # Get the recipe. The parameter is a guid.
 def get_recipe(recipe):
-    notestore = get_notestore()
+    notestore = get_client().get_note_store()
     full = notestore.getNote(recipe, True, False, False, False)
     content = strip_tags(full.content.decode('utf-8'))
 
-    for resource in full.resources:
-        content = update_resource(content, resource)
+    if full.resources is not None:
+        for resource in full.resources:
+            content = update_resource(content, resource)
 
     return { "content": content }
 
@@ -48,10 +49,11 @@ def get_notebook(notestore, name):
             return notebook
     raise LookupError
 
-def get_notestore():
+# Get the client. This is wrapped in a helper because it probably should
+# be cached in the future.
+def get_client():
     # TODO: Caching?
-    client = EvernoteClient(token=app.config['EVERNOTE_TOKEN'])
-    return client.get_note_store()
+    return EvernoteClient(token=app.config['EVERNOTE_TOKEN'])
 
 # Remove a few of the Evernote specific tags that aren't meaningful.
 def strip_tags(content):
@@ -81,8 +83,36 @@ def download_file(guid, path):
         pass
 
     # Download and save the file.
-    notestore = get_notestore()
+    notestore = get_client().get_note_store()
     resource = notestore.getResource(guid, True, False, True, False)
     f = open(path, "w+")
     f.write(resource.data.body)
+    f.close()
+
+# Retrieve the thumbnail. It may already be cached.
+def get_thumbnail(guid):
+    user_store = get_client().get_user_store()
+    username = user_store.getUser().username
+    user_info = user_store.getPublicUserInfo(username)
+    posturl = "%s/thm/note/%s.jpg?size=75" % (user_info.webApiUrlPrefix, guid)
+    path = app.config["THUMBNAILS"] + guid
+
+    download_file_post(posturl, path)
+
+# Download a file via authed HTTP post.
+def download_file_post(url, path):
+    # First, see if the file already exists.
+    try:
+        f = open(path, "r")
+        return
+    except:
+        pass
+
+    body = {'auth': app.config['EVERNOTE_TOKEN']}
+    header = {'Content-type': 'application/x-www-form-urlencoded'}
+    request = urllib2.Request(url, urllib.urlencode(body), header)
+    response = urllib2.urlopen(request)
+
+    f = open(path, "w+")
+    f.write(response.read())
     f.close()
