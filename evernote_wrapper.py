@@ -68,39 +68,27 @@ def strip_tags(content):
 # Replace the content's resource with an img tag pointing to the dowloaded
 # resource.
 def update_resource(content, resource):
-    imageurl = app.config["NOTEIMAGES"] + resource.guid
-    download_file(resource.guid, imageurl)
+    posturl = "%s/res/%s" % (get_url_prefix(), resource.guid)
+    path = app.config["NOTEIMAGES"] + resource.guid
+    download_file(posturl, path)
     hash = binascii.hexlify(resource.data.bodyHash)
-    return re.sub(r'(<en-media hash="' + hash + '.*</en-media>)', '<img src="/' + imageurl + '" />', content, flags=re.DOTALL)
-
-# Download a resource with the given guid. If it already exists do nothing.
-def download_file(guid, path):
-    # First, see if the file already exists.
-    try:
-        f = open(path, "r")
-        return
-    except:
-        pass
-
-    # Download and save the file.
-    notestore = get_client().get_note_store()
-    resource = notestore.getResource(guid, True, False, True, False)
-    f = open(path, "w+")
-    f.write(resource.data.body)
-    f.close()
+    return re.sub(r'(<en-media hash="' + hash + '.*</en-media>)', '<img src="/' + path + '" />', content, flags=re.DOTALL)
 
 # Retrieve the thumbnail. It may already be cached.
 def get_thumbnail(guid):
+    posturl = "%s/thm/note/%s.jpg?size=75" % (get_url_prefix(), guid)
+    path = app.config["THUMBNAILS"] + guid
+    download_file(posturl, path)
+
+# Get the URL prefix.
+def get_url_prefix():
     user_store = get_client().get_user_store()
     username = user_store.getUser().username
     user_info = user_store.getPublicUserInfo(username)
-    posturl = "%s/thm/note/%s.jpg?size=75" % (user_info.webApiUrlPrefix, guid)
-    path = app.config["THUMBNAILS"] + guid
-
-    download_file_post(posturl, path)
+    return user_info.webApiUrlPrefix
 
 # Download a file via authed HTTP post.
-def download_file_post(url, path):
+def download_file(url, path):
     # First, see if the file already exists.
     try:
         f = open(path, "r")
