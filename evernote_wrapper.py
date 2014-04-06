@@ -1,5 +1,7 @@
 from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
+import binascii
+import re
 from vmenu import app
 
 # Get all of the tags used in the default notebook.
@@ -33,7 +35,12 @@ def get_recipes(tag):
 def get_recipe(recipe):
     notestore = get_notestore()
     full = notestore.getNote(recipe, True, False, False, False)
-    return { "content": full.content.decode('utf-8') }
+    content = strip_tags(full.content.decode('utf-8'))
+
+    for resource in full.resources:
+        content = update_resource(content, resource)
+
+    return { "content": content }
 
 def get_notebook(notestore, name):
     for notebook in notestore.listNotebooks():
@@ -45,3 +52,37 @@ def get_notestore():
     # TODO: Caching?
     client = EvernoteClient(token=app.config['EVERNOTE_TOKEN'])
     return client.get_note_store()
+
+# Remove a few of the Evernote specific tags that aren't meaningful.
+def strip_tags(content):
+    start = '''<\?xml version="1.0" encoding="UTF-8"\?>
+<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
+<en-note>'''
+    end = '</en-note>'
+
+    content = re.sub(start, '', content);
+    return re.sub(end, '', content);
+
+# Replace the content's resource with an img tag pointing to the dowloaded
+# resource.
+def update_resource(content, resource):
+    imageurl = app.config["NOTEIMAGES"] + resource.guid
+    download_file(resource.guid, imageurl)
+    hash = binascii.hexlify(resource.data.bodyHash)
+    return re.sub(r'(<en-media hash="' + hash + '.*</en-media>)', '<img src="/' + imageurl + '" />', content, flags=re.DOTALL)
+
+# Download a resource with the given guid. If it already exists do nothing.
+def download_file(guid, path):
+    # First, see if the file already exists.
+    try:
+        f = open(path, "r")
+        return
+    except:
+        pass
+
+    # Download and save the file.
+    notestore = get_notestore()
+    resource = notestore.getResource(guid, True, False, True, False)
+    f = open(path, "w+")
+    f.write(resource.data.body)
+    f.close()
