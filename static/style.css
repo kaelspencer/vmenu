@@ -1,3 +1,49 @@
 body {
   font: 1em/1.7em 'Helvetica Neue';
 }
+
+ul.menu {
+    list-style: none;
+    border: 1px solid rgb(230, 230, 230);
+    padding: 0;
+    margin: 0;
+}
+
+.menu li {
+    border: 1px solid rgb(230, 230, 230);
+    margin: 0;
+    width: 598px;
+}
+
+.menu li a {
+    position: relative;
+    display: block;
+    width: 598px;
+    height: 150px;
+    color: inherit;
+    text-decoration: inherit;
+    text-align:center;
+    line-height:150px;
+    overflow:hidden;
+    vertical-align:top;
+}
+
+.menu li img {
+    width: 598px;
+    margin-top: calc(-50% + 75px);
+}
+
+.menu h2 {
+    position: absolute;
+    top: 30px;
+    width: 100%;
+}
+
+.menu h2 span {
+    color: white;
+    font: bold 24px/45px 'Helvetica Neue', Helvetica, Sans-Serif;
+    letter-spacing: -1px;
+    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+}

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block body %}
-    <ul>
+{% block content %}
+    <ul class="menu">
     {% for tag in tags %}
-        <li><a href="/tag/{{ tag.guid|safe }}/">{{ tag.name|safe }}</a></li>
+        <li><a href="/tag/{{ tag.guid|safe }}/"><span>{{ tag.name|safe }}</span></a></li>
     {% else %}
-        <li><em>Unbelievable. No tags here so far</em></li>
+        <li><em>Unbelievable. No tags here so far.</em></li>
     {% endfor %}
     </ul>
 {% endblock %}

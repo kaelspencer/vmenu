@@ -26,8 +26,13 @@ def get_recipes(tag):
     results = []
 
     for n in notes:
-        results.append(notestore.getNote(n.guid, False, False, False, False))
-        get_thumbnail(n.guid)
+        note = notestore.getNote(n.guid, False, False, False, False)
+        result = {
+            'guid': note.guid,
+            'title': note.title,
+            'thumbnail': get_thumbnail(n.guid)
+        }
+        results.append(result)
 
     return results
 
@@ -76,9 +81,10 @@ def update_resource(content, resource):
 
 # Retrieve the thumbnail. It may already be cached.
 def get_thumbnail(guid):
-    posturl = "%s/thm/note/%s.jpg?size=75" % (get_url_prefix(), guid)
-    path = app.config["THUMBNAILS"] + guid
+    posturl = "%s/thm/note/%s.jpg" % (get_url_prefix(), guid)
+    path = app.config["THUMBNAILS"] + guid + '.jpg'
     download_file(posturl, path)
+    return '/' + path
 
 # Get the URL prefix.
 def get_url_prefix():

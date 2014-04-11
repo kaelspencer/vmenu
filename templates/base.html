@@ -9,5 +9,9 @@
 </head>
 
 <body>
-    {% block body %}{% endblock %}
+    {% block body %}
+    <div class="container_12">
+        {% block content %}{% endblock %}
+    </div>
+    {% endblock %}
 </body>

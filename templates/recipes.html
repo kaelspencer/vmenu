@@ -1,8 +1,13 @@
 {% extends "base.html" %}
-{% block body %}
-    <ul>
+{% block content %}
+    <ul class="menu">
     {% for recipe in recipes %}
-        <li><a href="/recipe/{{ recipe.guid|safe }}/">{{ recipe.title|safe }}</a></li>
+        <li>
+            <a href="/recipe/{{ recipe.guid|safe }}/">
+                <img src="{{ recipe.thumbnail|safe }}" />
+                <h2><span>{{ recipe.title|safe }}</span></h2>
+            </a>
+        </li>
     {% else %}
         <li><em>Unbelievable. No recipes here so far</em></li>
     {% endfor %}
