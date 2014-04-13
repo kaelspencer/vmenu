@@ -1,7 +1,10 @@
 from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
+from werkzeug.contrib.cache import MemcachedCache
 import binascii, re, urllib, urllib2
 from vmenu import app
+
+cache = MemcachedCache(['127.0.0.1:11211'])
 
 # Get all of the tags used in the default notebook.
 def get_tags():
@@ -39,12 +42,25 @@ def get_recipes(tag):
 # Get the recipe. The parameter is a guid.
 def get_recipe(recipe):
     notestore = get_client().get_note_store()
-    full = notestore.getNote(recipe, True, False, False, False)
-    content = strip_tags(full.content.decode('utf-8'))
 
-    if full.resources is not None:
-        for resource in full.resources:
-            content = update_resource(content, resource)
+    # Get the note metadata without a body or resources. This result contains
+    # the body hash used for caching.
+    partial = notestore.getNote(recipe, False, False, False, False)
+
+    # Check the cache for this note.
+    hash = binascii.hexlify(partial.contentHash)
+    content = cache.get(hash)
+    if content is None:
+        full = notestore.getNote(recipe, True, False, False, False)
+        content = strip_tags(full.content.decode('utf-8'))
+
+        if full.resources is not None:
+            for resource in full.resources:
+                content = update_resource(content, resource)
+
+        # Cache the content. The key is the MD5 hash of the server stored content
+        # but the stored value in this cache has stripped out tags.
+        cache.set(hash, content)
 
     return { "content": content }
 
