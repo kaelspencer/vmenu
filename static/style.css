@@ -2,6 +2,41 @@ body {
   font: 1em/1.7em 'Helvetica Neue';
 }
 
+nav {
+    height: 50px;
+    margin-bottom: -10px;
+    position: fixed;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    border-bottom-left-radius: 25px 25px;
+    border-bottom-right-radius: 25px 25px;
+    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 0.7);
+
+    position: relative;
+    z-index: 10;
+}
+
+nav ul li a {
+    position: relative;
+    display: block;
+    text-decoration: inherit;
+    text-align: center;
+    overflow: hidden;
+    float: left;
+    line-height: 50px;
+    width: 100%;
+
+    color: white;
+    font: bold 24px/45px 'Helvetica Neue', Helvetica, Sans-Serif;
+    letter-spacing: -1px;
+}
+
 ul.menu {
     list-style: none;
     border: 1px solid rgb(230, 230, 230);
@@ -22,10 +57,9 @@ ul.menu {
     height: 150px;
     color: inherit;
     text-decoration: inherit;
-    text-align:center;
-    line-height:150px;
-    overflow:hidden;
-    vertical-align:top;
+    text-align: center;
+    line-height: 150px;
+    overflow: hidden;
 }
 
 .menu li img {
