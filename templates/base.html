@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    {% block body %}
+{% block body %}
     <div class="container_12">
         <nav class="grid_10 prefix_1 suffix_1 alpha omega">
             <ul>
@@ -21,6 +21,18 @@
         <div class="clear"></div>
 
         {% block content %}{% endblock %}
+
+        {% block footer %}
+        <div class="clear"></div>
+
+        <footer>
+            <ul>
+            {% for letter in footer_links() %}
+                <li><a href="{{ tagurl }}{{ letter }}/">{{ letter }}</a></li>
+            {% endfor %}
+            </ul>
+        </footer>
+        {% endblock %}
     </div>
-    {% endblock %}
+{% endblock %}
 </body>
