@@ -2,6 +2,11 @@ body {
   font: 1em/1.7em 'Helvetica Neue';
 }
 
+/* Counteract the header overlap in the recipe. */
+article {
+    margin-top: 10px;
+}
+
 nav {
     height: 50px;
     margin-bottom: -10px;
