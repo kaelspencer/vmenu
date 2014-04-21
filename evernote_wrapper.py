@@ -11,6 +11,7 @@ def get_tags():
     notestore = get_client().get_note_store()
     notebook = get_notebook(notestore, app.config['NOTEBOOK'])
     tags = notestore.listTagsByNotebook(notebook.guid)
+    tags = sorted(tags, key = lambda Tag: Tag.name)
     return tags
 
 # Get all of the notes that are tagged with the provided tag in the default notebook.
@@ -25,7 +26,7 @@ def get_recipes(tag):
     max_notes = 10
     result_spec = NotesMetadataResultSpec(includeTitle=True)
     notes_result = notestore.findNotesMetadata(filter, offset, max_notes, result_spec)
-    notes = notes_result.notes
+    notes = sorted(notes_result.notes, key = lambda NoteMetadata: NoteMetadata.title)
     results = []
 
     for n in notes:
@@ -48,13 +49,13 @@ def get_recipe(recipe):
     partial = notestore.getNote(recipe, False, False, False, False)
 
     # Check the cache for this note.
-    hash = binascii.hexlify(partial.contentHash)
+    hash = '%s_%s' % (binascii.hexlify(partial.contentHash), app.config['RECIPE_IMAGES'])
     content = cache.get(hash)
     if content is None:
         full = notestore.getNote(recipe, True, False, False, False)
         content = strip_tags(full.content.decode('utf-8'))
 
-        if full.resources is not None:
+        if full.resources is not None and app.config['RECIPE_IMAGES']:
             for resource in full.resources:
                 content = update_resource(content, resource)
 
@@ -74,7 +75,7 @@ def get_notebook(notestore, name):
 # be cached in the future.
 def get_client():
     # TODO: Caching?
-    return EvernoteClient(token=app.config['EVERNOTE_TOKEN'])
+    return EvernoteClient(token=app.config['EVERNOTE_TOKEN'], sandbox=app.config['SANDBOX'])
 
 # Remove a few of the Evernote specific tags that aren't meaningful.
 def strip_tags(content):

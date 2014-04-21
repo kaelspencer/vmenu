@@ -16,6 +16,11 @@ app.url_map.converters['regex'] = RegexConverter
 app.config.update(dict(
     DEBUG=True,
     EVERNOTE_TOKEN='',
+    SANDBOX=False,
+    NOTEBOOK='',
+    NOTEIMAGES='static/noteimages/',
+    THUMBNAILS='static/thumbnails/',
+    RECIPE_IMAGES=True,
 ))
 app.config.from_envvar('VMENU_SETTINGS', silent=True)
 
