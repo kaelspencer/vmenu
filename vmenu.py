@@ -30,16 +30,23 @@ def footer_links():
 app.jinja_env.globals.update(footer_links=footer_links)
 
 @app.route('/')
-def show_tags():
+@app.route('/<regex("[a-zA-Z]{1}"):start>/')
+@app.route('/<regex("-?[0-9]*"):page>/')
+@app.route('/<regex("[a-zA-Z]{1}"):start>/<regex("-?[0-9]*"):page>/')
+def show_tags(start='', page=0):
     tags = evernote_wrapper.get_tags()
-    return render_template('tags.html', tags=tags)
+    start += '/'
+    return render_template('tags.html', tags=tags, tagurl='/', start=start, page=int(page))
 
 @app.route('/tag/<tag>/')
 @app.route('/tag/<tag>/<regex("[a-zA-Z]{1}"):start>/')
-def show_recipes(tag, start='a'):
+@app.route('/tag/<tag>/<regex("[0-9]*"):page>/')
+@app.route('/tag/<tag>/<regex("[a-zA-Z]{1}"):start>/<regex("[0-9]*"):page>/')
+def show_recipes(tag, start='a', page=0):
     recipes = evernote_wrapper.get_recipes(tag)
     tagurl = '/tag/%s/' % tag
-    return render_template('recipes.html', recipes=recipes[:6], tagurl=tagurl, start=start.lower())
+    start += '/'
+    return render_template('recipes.html', recipes=recipes[:6], tagurl=tagurl, start=start, page=page)
 
 @app.route('/recipe/<recipe>/')
 def show_recipe(recipe):
