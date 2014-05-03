@@ -30,10 +30,10 @@ def get_recipes(tag):
     results = []
 
     for n in notes:
-        note = notestore.getNote(n.guid, False, False, False, False)
+        n = notestore.getNote(n.guid, False, False, False, False)
         result = {
-            'guid': note.guid,
-            'title': note.title,
+            'guid': n.guid,
+            'title': n.title,
             'thumbnail': get_thumbnail(n.guid)
         }
         results.append(result)
