@@ -2,14 +2,14 @@ from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
 from werkzeug.contrib.cache import MemcachedCache
 import binascii, re, urllib, urllib2
-from vmenu import app
+import vmenu
 
 cache = MemcachedCache(['127.0.0.1:11211'])
 
 # Get all of the tags used in the default notebook.
 def get_tags():
     notestore = get_client().get_note_store()
-    notebook = get_notebook(notestore, app.config['NOTEBOOK'])
+    notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
     tags = notestore.listTagsByNotebook(notebook.guid)
     tags = sorted(tags, key = lambda Tag: Tag.name)
     return tags
@@ -18,7 +18,7 @@ def get_tags():
 # Tag is a guid.
 def get_recipes(tag):
     notestore = get_client().get_note_store()
-    notebook = get_notebook(notestore, app.config['NOTEBOOK'])
+    notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
 
     tag_guids = [tag]
     filter = NoteFilter(notebookGuid=notebook.guid, tagGuids=tag_guids)
@@ -49,13 +49,13 @@ def get_recipe(recipe):
     partial = notestore.getNote(recipe, False, False, False, False)
 
     # Check the cache for this note.
-    hash = '%s_%s' % (binascii.hexlify(partial.contentHash), app.config['RECIPE_IMAGES'])
+    hash = '%s_%s' % (binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
     content = cache.get(hash)
     if content is None:
         full = notestore.getNote(recipe, True, False, False, False)
         content = strip_tags(full.content.decode('utf-8'))
 
-        if full.resources is not None and app.config['RECIPE_IMAGES']:
+        if full.resources is not None and vmenu.app.config['RECIPE_IMAGES']:
             for resource in full.resources:
                 content = update_resource(content, resource)
 
@@ -75,7 +75,7 @@ def get_notebook(notestore, name):
 # be cached in the future.
 def get_client():
     # TODO: Caching?
-    return EvernoteClient(token=app.config['EVERNOTE_TOKEN'], sandbox=app.config['SANDBOX'])
+    return EvernoteClient(token=vmenu.app.config['EVERNOTE_TOKEN'], sandbox=vmenu.app.config['SANDBOX'])
 
 # Remove a few of the Evernote specific tags that aren't meaningful.
 def strip_tags(content):
@@ -91,7 +91,7 @@ def strip_tags(content):
 # resource.
 def update_resource(content, resource):
     posturl = "%s/res/%s" % (get_url_prefix(), resource.guid)
-    path = app.config["NOTEIMAGES"] + resource.guid
+    path = vmenu.app.config["NOTEIMAGES"] + resource.guid
     download_file(posturl, path)
     hash = binascii.hexlify(resource.data.bodyHash)
     return re.sub(r'(<en-media hash="' + hash + '.*</en-media>)', '<img src="/' + path + '" />', content, flags=re.DOTALL)
@@ -99,7 +99,7 @@ def update_resource(content, resource):
 # Retrieve the thumbnail. It may already be cached.
 def get_thumbnail(guid):
     posturl = "%s/thm/note/%s.jpg" % (get_url_prefix(), guid)
-    path = app.config["THUMBNAILS"] + guid + '.jpg'
+    path = vmenu.app.config["THUMBNAILS"] + guid + '.jpg'
     download_file(posturl, path)
     return '/' + path
 
@@ -119,7 +119,7 @@ def download_file(url, path):
     except:
         pass
 
-    body = {'auth': app.config['EVERNOTE_TOKEN']}
+    body = {'auth': vmenu.app.config['EVERNOTE_TOKEN']}
     header = {'Content-type': 'application/x-www-form-urlencoded'}
     request = urllib2.Request(url, urllib.urlencode(body), header)
     response = urllib2.urlopen(request)
