@@ -30,7 +30,6 @@ def get_recipes(tag):
     results = []
 
     for n in notes:
-        n = notestore.getNote(n.guid, False, False, False, False)
         result = {
             'guid': n.guid,
             'title': n.title,
