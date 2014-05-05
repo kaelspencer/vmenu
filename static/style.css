@@ -116,3 +116,8 @@ ul.menu {
     background: rgba(0, 0, 0, 0.7);
     padding: 10px;
 }
+
+.tag {
+    margin-top: 36px;
+    font: bold 24px/45px 'Helvetica Neue', Helvetica, Sans-Serif;
+}

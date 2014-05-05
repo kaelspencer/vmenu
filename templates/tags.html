@@ -2,7 +2,7 @@
 {% block content %}
     <ul class="menu">
     {% for tag in tags %}
-        <li><a href="/tag/{{ tag.guid|safe }}/"><span>{{ tag.name|safe }}</span></a></li>
+        <li><a href="/tag/{{ tag.guid|safe }}/"><div class="tag">{{ tag.name|safe }}</div></a></li>
     {% else %}
         <li><em>Unbelievable. No tags here so far.</em></li>
     {% endfor %}
