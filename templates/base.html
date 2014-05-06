@@ -29,7 +29,7 @@
             <ul>
                 <li><a href="{{ tagurl }}{{ start }}{{ page - 1 }}/">&lt;</a></li>
             {% for letter in footer_links() %}
-                <li><a href="{{ tagurl }}{{ letter }}/">{{ letter }}</a></li>
+                <li><a href="{{ tagurl }}{{ letter[1] }}/">{{ letter[0] }}</a></li>
             {% endfor %}
                 <li><a href="{{ tagurl }}{{ start }}{{ page + 1 }}/">&gt;</a></li>
             </ul>

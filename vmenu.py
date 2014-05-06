@@ -27,7 +27,7 @@ app.config.from_envvar('VMENU_SETTINGS', silent=True)
 
 # A helper to return a set of letters for the footer links.
 def footer_links():
-    return string.ascii_lowercase
+    return [['a - e', 'a'], ['f - j', 'f'], ['k - n', 'k'], ['o - r', 'o'], ['s - v', 's'], ['w - z', 'w']]
 app.jinja_env.globals.update(footer_links=footer_links)
 
 @app.route('/')
