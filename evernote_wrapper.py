@@ -8,34 +8,46 @@ cache = MemcachedCache(['127.0.0.1:11211'])
 
 # Get all of the tags used in the default notebook.
 def get_tags():
-    notestore = get_client().get_note_store()
-    notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
-    tags = notestore.listTagsByNotebook(notebook.guid)
-    tags = sorted(tags, key = lambda Tag: Tag.name)
+    key = vmenu.app.config['CACHE_PREFIX'] + 'tags'
+    tags = cache.get(key)
+
+    if tags is None:
+        notestore = get_client().get_note_store()
+        notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
+        tags = notestore.listTagsByNotebook(notebook.guid)
+        tags = sorted(tags, key = lambda Tag: Tag.name)
+        cache.set(key, tags)
+
     return tags
 
 # Get all of the notes that are tagged with the provided tag in the default notebook.
 # Tag is a guid.
 def get_recipes(tag):
-    notestore = get_client().get_note_store()
-    notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
+    key = vmenu.app.config['CACHE_PREFIX'] + 'recipes-' + tag
+    results = cache.get(key)
 
-    tag_guids = [tag]
-    filter = NoteFilter(notebookGuid=notebook.guid, tagGuids=tag_guids)
-    offset = 0
-    max_notes = 500
-    result_spec = NotesMetadataResultSpec(includeTitle=True)
-    notes_result = notestore.findNotesMetadata(filter, offset, max_notes, result_spec)
-    notes = sorted(notes_result.notes, key = lambda NoteMetadata: NoteMetadata.title)
-    results = []
+    if results is None:
+        notestore = get_client().get_note_store()
+        notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
 
-    for n in notes:
-        result = {
-            'guid': n.guid,
-            'title': n.title,
-            'thumbnail': get_thumbnail(n.guid)
-        }
-        results.append(result)
+        tag_guids = [tag]
+        filter = NoteFilter(notebookGuid=notebook.guid, tagGuids=tag_guids)
+        offset = 0
+        max_notes = 20
+        result_spec = NotesMetadataResultSpec(includeTitle=True)
+        notes_result = notestore.findNotesMetadata(filter, offset, max_notes, result_spec)
+        notes = sorted(notes_result.notes, key = lambda NoteMetadata: NoteMetadata.title)
+        results = []
+
+        for n in notes:
+            result = {
+                'guid': n.guid,
+                'title': n.title,
+                'thumbnail': get_thumbnail(n.guid)
+            }
+            results.append(result)
+
+        cache.set(key, results);
 
     return results
 
