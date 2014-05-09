@@ -23,7 +23,8 @@ app.config.update(dict(
     NOTEBOOK='',
     NOTEIMAGES='static/noteimages/',
     THUMBNAILS='static/thumbnails/',
-    RECIPE_IMAGES=True,
+    RECIPE_IMAGES=False,
+    CACHE_PREFIX='vmenu:', # Intentionally not including this in the default config file, since no one really needs to change it. They can, but why?
 ))
 app.config.from_envvar('VMENU_SETTINGS', silent=True)
 
@@ -37,7 +38,7 @@ cache = MemcachedCache(['127.0.0.1:11211'])
 def cached(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        cache_key = request.path.replace(' ', '_')
+        cache_key = app.config['CACHE_PREFIX'] + request.path.replace(' ', '_')
         rv = cache.get(cache_key)
         if rv is not None:
             return rv
