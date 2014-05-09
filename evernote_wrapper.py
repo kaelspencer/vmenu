@@ -33,7 +33,7 @@ def get_recipes(tag):
         tag_guids = [tag]
         filter = NoteFilter(notebookGuid=notebook.guid, tagGuids=tag_guids)
         offset = 0
-        max_notes = 20
+        max_notes = 500
         result_spec = NotesMetadataResultSpec(includeTitle=True)
         notes_result = notestore.findNotesMetadata(filter, offset, max_notes, result_spec)
         notes = sorted(notes_result.notes, key = lambda NoteMetadata: NoteMetadata.title)
