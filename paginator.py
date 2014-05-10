@@ -1,3 +1,5 @@
+import logging
+
 class Paginator(object):
     def __init__(self, objects, key, letter, offset, pagesize):
         self.objects = objects
@@ -31,7 +33,7 @@ class Paginator(object):
         elif self.start >= len(objects):
             self.start = len(objects) - len(objects) % pagesize
 
-        print 'Letter: %s, Offset: %s, Page Size: %s, Length: %s, Start: %s' % (letter, offset, pagesize, len(objects), self.start)
+        logging.info('Letter: %s, Offset: %s, Page Size: %s, Length: %s, Start: %s', letter, offset, pagesize, len(objects), self.start)
 
     def page(self):
         return self.objects[self.start:self.start + self.pagesize]

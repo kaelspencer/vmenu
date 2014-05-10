@@ -1,8 +1,7 @@
 from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
 from werkzeug.contrib.cache import MemcachedCache
-import binascii, re, urllib, urllib2
-import vmenu
+import binascii, re, urllib, urllib2, logging, vmenu
 
 cache = MemcachedCache(['127.0.0.1:11211'])
 
@@ -12,7 +11,7 @@ def get_tags():
     tags = cache.get(key)
 
     if tags is None:
-        print 'Cache miss for %s' % key
+        logging.info('Cache miss for %s', key)
         notestore = get_client().get_note_store()
         notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
         tags = notestore.listTagsByNotebook(notebook.guid)
@@ -28,7 +27,7 @@ def get_recipes(tag):
     results = cache.get(key)
 
     if results is None:
-        print 'Cache miss for %s' % key
+        logging.info('Cache miss for %s', key)
         notestore = get_client().get_note_store()
         notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
 
@@ -65,7 +64,7 @@ def get_recipe(recipe):
     hash = '%s%s_%s' % (vmenu.app.config['CACHE_PREFIX'], binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
     content = cache.get(hash)
     if content is None:
-        print 'Cache miss for %s' % hash
+        logging.info('Cache miss for %s', key)
         full = notestore.getNote(recipe, True, False, False, False)
         content = strip_tags(full.content.decode('utf-8'))
 
@@ -133,6 +132,7 @@ def download_file(url, path):
     except:
         pass
 
+    logging.info('Fetching file from Evernote: %s', url)
     body = {'auth': vmenu.app.config['EVERNOTE_TOKEN']}
     header = {'Content-type': 'application/x-www-form-urlencoded'}
     request = urllib2.Request(url, urllib.urlencode(body), header)
@@ -141,3 +141,4 @@ def download_file(url, path):
     f = open(path, "w+")
     f.write(response.read())
     f.close()
+    logging.info('Finished fetching file from Evernote: %s', url)
