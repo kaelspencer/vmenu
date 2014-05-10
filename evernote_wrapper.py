@@ -12,6 +12,7 @@ def get_tags():
     tags = cache.get(key)
 
     if tags is None:
+        print 'Cache miss for %s' % key
         notestore = get_client().get_note_store()
         notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
         tags = notestore.listTagsByNotebook(notebook.guid)
@@ -27,6 +28,7 @@ def get_recipes(tag):
     results = cache.get(key)
 
     if results is None:
+        print 'Cache miss for %s' % key
         notestore = get_client().get_note_store()
         notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
 
@@ -60,9 +62,10 @@ def get_recipe(recipe):
     partial = notestore.getNote(recipe, False, False, False, False)
 
     # Check the cache for this note.
-    hash = '%s_%s' % (binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
+    hash = '%s%s_%s' % (vmenu.app.config['CACHE_PREFIX'], binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
     content = cache.get(hash)
     if content is None:
+        print 'Cache miss for %s' % hash
         full = notestore.getNote(recipe, True, False, False, False)
         content = strip_tags(full.content.decode('utf-8'))
 
