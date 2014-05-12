@@ -1,6 +1,7 @@
 from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
 from werkzeug.contrib.cache import MemcachedCache
+from trace import trace, tracen
 import binascii, re, urllib, urllib2, logging, vmenu
 
 cache = MemcachedCache(['127.0.0.1:11211'])
@@ -12,9 +13,11 @@ def get_tags():
 
     if tags is None:
         logging.info('Cache miss for %s', key)
-        notestore = get_client().get_note_store()
-        notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
-        tags = notestore.listTagsByNotebook(notebook.guid)
+        client = trace(get_client)
+        notestore = trace(client.get_note_store)
+        notebook = trace(get_notebook, notestore, vmenu.app.config['NOTEBOOK'])
+        tags = tracen('listTagsByNotebook', notestore.listTagsByNotebook, notebook.guid)
+
         tags = sorted(tags, key = lambda Tag: Tag.name)
         cache.set(key, tags)
 
@@ -28,25 +31,28 @@ def get_recipes(tag):
 
     if results is None:
         logging.info('Cache miss for %s', key)
-        notestore = get_client().get_note_store()
-        notebook = get_notebook(notestore, vmenu.app.config['NOTEBOOK'])
+        client = trace(get_client)
+        notestore = trace(client.get_note_store)
+        notebook = trace(get_notebook, notestore, vmenu.app.config['NOTEBOOK'])
 
         tag_guids = [tag]
         filter = NoteFilter(notebookGuid=notebook.guid, tagGuids=tag_guids)
         offset = 0
         max_notes = 500
         result_spec = NotesMetadataResultSpec(includeTitle=True)
-        notes_result = notestore.findNotesMetadata(filter, offset, max_notes, result_spec)
+        notes_result = trace(notestore.findNotesMetadata, filter, offset, max_notes, result_spec)
         notes = sorted(notes_result.notes, key = lambda NoteMetadata: NoteMetadata.title)
         results = []
 
-        for n in notes:
-            result = {
-                'guid': n.guid,
-                'title': n.title,
-                'thumbnail': get_thumbnail(n.guid)
-            }
-            results.append(result)
+        def process_notes():
+            for n in notes:
+                result = {
+                    'guid': n.guid,
+                    'title': n.title,
+                    'thumbnail': trace(get_thumbnail, n.guid)
+                }
+                results.append(result)
+        trace(process_notes)
 
         cache.set(key, results);
 
@@ -54,32 +60,35 @@ def get_recipes(tag):
 
 # Get the recipe. The parameter is a guid.
 def get_recipe(recipe):
-    notestore = get_client().get_note_store()
+    client = trace(get_client)
+    notestore = trace(client.get_note_store)
 
     # Get the note metadata without a body or resources. This result contains
     # the body hash used for caching.
-    partial = notestore.getNote(recipe, False, False, False, False)
+    partial = trace(notestore.getNote, recipe, False, False, False, False)
 
     # Check the cache for this note.
-    hash = '%s%s_%s' % (vmenu.app.config['CACHE_PREFIX'], binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
-    content = cache.get(hash)
+    key = '%s%s_%s' % (vmenu.app.config['CACHE_PREFIX'], binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
+    content = cache.get(key)
     if content is None:
         logging.info('Cache miss for %s', key)
-        full = notestore.getNote(recipe, True, False, False, False)
+        full = trace(notestore.getNote, recipe, True, False, False, False)
         content = strip_tags(full.content.decode('utf-8'))
 
-        if full.resources is not None and vmenu.app.config['RECIPE_IMAGES']:
-            for resource in full.resources:
-                content = update_resource(content, resource)
+        def process():
+            if full.resources is not None and vmenu.app.config['RECIPE_IMAGES']:
+                for resource in full.resources:
+                    content = trace(update_resource, content, resource)
+        trace(process)
 
         # Cache the content. The key is the MD5 hash of the server stored content
         # but the stored value in this cache has stripped out tags.
-        cache.set(hash, content)
+        cache.set(key, content)
 
     return { "content": content }
 
 def get_notebook(notestore, name):
-    for notebook in notestore.listNotebooks():
+    for notebook in trace(notestore.listNotebooks):
         if notebook.name == name:
             return notebook
     raise LookupError

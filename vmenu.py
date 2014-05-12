@@ -4,6 +4,7 @@ from werkzeug.routing import BaseConverter
 from functools import wraps
 import evernote_wrapper, string, logging
 from paginator import Paginator
+from trace import trace
 
 app = Flask(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)s %(filename)s:%(lineno)d: %(message)s', level=logging.DEBUG)
@@ -32,7 +33,7 @@ def logrequest(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         logging.info(request.path)
-        return f(*args, **kwargs)
+        return trace(f, *args, **kwargs)
     return decorated_function
 
 # A helper to return a set of letters for the footer links.
