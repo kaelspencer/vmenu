@@ -2,9 +2,10 @@
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 from werkzeug.routing import BaseConverter
 from functools import wraps
-import evernote_wrapper, string, logging
+import evernote_wrapper, string, logging, urllib, urllib2
 from paginator import Paginator
 from trace import trace
+from tasks import make_celery
 
 app = Flask(__name__)
 logging.basicConfig(format='%(asctime)s %(levelname)s %(filename)s:%(lineno)d: %(message)s', level=logging.DEBUG)
@@ -26,8 +27,12 @@ app.config.update(dict(
     THUMBNAILS='static/thumbnails/',
     RECIPE_IMAGES=False,
     CACHE_PREFIX='vmenu:', # Intentionally not including this in the default config file, since no one really needs to change it. They can, but why?
+    CELERY_BROKER_URL='amqp://',
+    CELERY_RESULT_BACKEND='amqp://',
 ))
 app.config.from_envvar('VMENU_SETTINGS', silent=True)
+
+celery = make_celery(app)
 
 def logrequest(f):
     @wraps(f)
@@ -40,6 +45,28 @@ def logrequest(f):
 def footer_links():
     return [['a - e', 'a'], ['f - j', 'f'], ['k - n', 'k'], ['o - r', 'o'], ['s - v', 's'], ['w - z', 'w']]
 app.jinja_env.globals.update(footer_links=footer_links)
+
+# Download a file via authed HTTP post. This should be in evernote_wrapper.py but I'm having trouble with the celery object.
+@celery.task(ignore_result=True, name="vmenu.download_file")
+def download_file(url, path):
+    # First, see if the file already exists.
+    print 'Retrieved %s' % url
+    try:
+        f = open(path, "r")
+        return
+    except:
+        pass
+
+    logging.info('Fetching file from Evernote: %s', url)
+    body = {'auth': app.config['EVERNOTE_TOKEN']}
+    header = {'Content-type': 'application/x-www-form-urlencoded'}
+    request = urllib2.Request(url, urllib.urlencode(body), header)
+    response = urllib2.urlopen(request)
+
+    f = open(path, "w+")
+    f.write(response.read())
+    f.close()
+    logging.info('Finished fetching file from Evernote: %s', url)
 
 @app.route('/')
 @app.route('/<regex("[a-zA-Z]{1}"):start>/')

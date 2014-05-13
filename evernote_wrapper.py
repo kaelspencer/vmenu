@@ -2,7 +2,7 @@ from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
 from werkzeug.contrib.cache import MemcachedCache
 from trace import trace, tracen
-import binascii, re, urllib, urllib2, logging, vmenu
+import binascii, re, logging, vmenu
 
 cache = MemcachedCache(['127.0.0.1:11211'])
 
@@ -114,7 +114,7 @@ def strip_tags(content):
 def update_resource(content, resource):
     posturl = "%s/res/%s" % (get_url_prefix(), resource.guid)
     path = vmenu.app.config["NOTEIMAGES"] + resource.guid
-    download_file(posturl, path)
+    vmenu.download_file.delay(posturl, path)
     hash = binascii.hexlify(resource.data.bodyHash)
     return re.sub(r'(<en-media hash="' + hash + '.*</en-media>)', '<img src="/' + path + '" />', content, flags=re.DOTALL)
 
@@ -122,7 +122,7 @@ def update_resource(content, resource):
 def get_thumbnail(guid):
     posturl = "%s/thm/note/%s.jpg" % (get_url_prefix(), guid)
     path = vmenu.app.config["THUMBNAILS"] + guid + '.jpg'
-    download_file(posturl, path)
+    vmenu.download_file.delay(posturl, path)
     return '/' + path
 
 # Get the URL prefix.
@@ -131,23 +131,3 @@ def get_url_prefix():
     username = user_store.getUser().username
     user_info = user_store.getPublicUserInfo(username)
     return user_info.webApiUrlPrefix
-
-# Download a file via authed HTTP post.
-def download_file(url, path):
-    # First, see if the file already exists.
-    try:
-        f = open(path, "r")
-        return
-    except:
-        pass
-
-    logging.info('Fetching file from Evernote: %s', url)
-    body = {'auth': vmenu.app.config['EVERNOTE_TOKEN']}
-    header = {'Content-type': 'application/x-www-form-urlencoded'}
-    request = urllib2.Request(url, urllib.urlencode(body), header)
-    response = urllib2.urlopen(request)
-
-    f = open(path, "w+")
-    f.write(response.read())
-    f.close()
-    logging.info('Finished fetching file from Evernote: %s', url)
