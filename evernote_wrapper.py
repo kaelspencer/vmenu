@@ -16,7 +16,7 @@ def get_tags():
         client = trace(get_client)
         notestore = trace(client.get_note_store)
         notebook = trace(get_notebook, notestore, vmenu.app.config['NOTEBOOK'])
-        tags = tracen('listTagsByNotebook', notestore.listTagsByNotebook, notebook.guid)
+        tags = tracen('Evernote.note_store.listTagsByNotebook', notestore.listTagsByNotebook, notebook.guid)
 
         tags = sorted(tags, key = lambda Tag: Tag.name)
         cache.set(key, tags)
@@ -40,7 +40,7 @@ def get_recipes(tag):
         offset = 0
         max_notes = 500
         result_spec = NotesMetadataResultSpec(includeTitle=True)
-        notes_result = trace(notestore.findNotesMetadata, filter, offset, max_notes, result_spec)
+        notes_result = tracen('Evernote.note_store.findNotesMetadata', notestore.findNotesMetadata, filter, offset, max_notes, result_spec)
         notes = sorted(notes_result.notes, key = lambda NoteMetadata: NoteMetadata.title)
         results = []
 
@@ -66,14 +66,14 @@ def get_recipe(recipe):
 
     # Get the note metadata without a body or resources. This result contains
     # the body hash used for caching.
-    partial = trace(notestore.getNote, recipe, False, False, False, False)
+    partial = tracen('Evernote.note_store.getNote', notestore.getNote, recipe, False, False, False, False)
 
     # Check the cache for this note.
     key = '%s%s_%s' % (vmenu.app.config['CACHE_PREFIX'], binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
     content = cache.get(key)
     if content is None:
         logging.info('Cache miss for %s', key)
-        full = trace(notestore.getNote, recipe, True, False, False, False)
+        full = tracen('Evernote.note_store.getNote', notestore.getNote, recipe, True, False, False, False)
         content = strip_tags(full.content.decode('utf-8'))
 
         def process():
@@ -90,7 +90,7 @@ def get_recipe(recipe):
     return { "content": content }
 
 def get_notebook(notestore, name):
-    for notebook in trace(notestore.listNotebooks):
+    for notebook in tracen('Evernote.note_store.listNotebooks', notestore.listNotebooks):
         if notebook.name == name:
             return notebook
     raise LookupError
