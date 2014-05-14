@@ -45,11 +45,12 @@ def get_recipes(tag):
         results = []
 
         def process_notes():
+            url_prefix = trace(get_url_prefix)
             for n in notes:
                 result = {
                     'guid': n.guid,
                     'title': n.title,
-                    'thumbnail': trace(get_thumbnail, n.guid)
+                    'thumbnail': trace(get_thumbnail, url_prefix, n.guid)
                 }
                 results.append(result)
         trace(process_notes)
@@ -76,9 +77,10 @@ def get_recipe(recipe):
         content = strip_tags(full.content.decode('utf-8'))
 
         def process():
+            url_prefix = trace(get_url_prefix)
             if full.resources is not None and vmenu.app.config['RECIPE_IMAGES']:
                 for resource in full.resources:
-                    content = trace(update_resource, content, resource)
+                    content = trace(update_resource, url_prefix, content, resource)
         trace(process)
 
         # Cache the content. The key is the MD5 hash of the server stored content
@@ -111,23 +113,32 @@ def strip_tags(content):
 
 # Replace the content's resource with an img tag pointing to the dowloaded
 # resource.
-def update_resource(content, resource):
-    posturl = "%s/res/%s" % (get_url_prefix(), resource.guid)
+def update_resource(url_prefix, content, resource):
+    posturl = "%s/res/%s" % (url_prefix, resource.guid)
     path = vmenu.app.config["NOTEIMAGES"] + resource.guid
     vmenu.download_file.delay(posturl, path)
     hash = binascii.hexlify(resource.data.bodyHash)
     return re.sub(r'(<en-media hash="' + hash + '.*</en-media>)', '<img src="/' + path + '" />', content, flags=re.DOTALL)
 
 # Retrieve the thumbnail. It may already be cached.
-def get_thumbnail(guid):
-    posturl = "%s/thm/note/%s.jpg" % (get_url_prefix(), guid)
+def get_thumbnail(url_prefix, guid):
+    posturl = "%s/thm/note/%s.jpg" % (url_prefix, guid)
     path = vmenu.app.config["THUMBNAILS"] + guid + '.jpg'
     vmenu.download_file.delay(posturl, path)
     return '/' + path
 
 # Get the URL prefix.
 def get_url_prefix():
-    user_store = get_client().get_user_store()
-    username = user_store.getUser().username
-    user_info = user_store.getPublicUserInfo(username)
-    return user_info.webApiUrlPrefix
+    key = vmenu.app.config['CACHE_PREFIX'] + 'url_prefix'
+    url_prefix = cache.get(key)
+
+    if url_prefix is None:
+        logging.info('Cache miss for %s', key)
+
+        user_store = get_client().get_user_store()
+        user_info = user_store.getPublicUserInfo(user_store.getUser().username)
+        url_prefix = user_info.webApiUrlPrefix
+
+        cache.set(key, url_prefix, timeout=60 * 60);
+
+    return url_prefix
