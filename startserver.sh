@@ -9,4 +9,5 @@ if [ -f $PIDFILE ]; then
 fi
 
 export VMENU_SETTINGS=debug.cfg
+exec celery --app=vmenu.celery worker --logfile /var/log/celery.log &
 exec uwsgi -s 127.0.0.1:49152 -w vmenu:app --daemonize /var/log/uwsgi/vmenu.log --pidfile $PIDFILE
