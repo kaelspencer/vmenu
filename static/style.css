@@ -42,9 +42,17 @@ nav ul li a {
     letter-spacing: -1px;
 }
 
+.content-wrap {
+    min-height: 800px;
+    height: auto !important;
+    height: 800px;
+    margin-bottom: -40px;
+}
+
 footer {
     width: 600px;
     height: 40px;
+    margin: 0 auto;
 }
 
 footer ul {

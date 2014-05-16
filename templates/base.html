@@ -10,10 +10,10 @@
 
 <body>
 {% block body %}
-    <div class="container_12">
+    <div class="container_12 content-wrap">
         <nav class="grid_10 prefix_1 suffix_1 alpha omega">
             <ul>
-                <li class="grid_5 alpha"><a href="/">Home</a></li>
+                <li class="grid_5 alpha"><a href="/" id="home">Home</a></li>
                 <li class="grid_5 omega"><a href="javascript:history.back()">Back</a></li>
             </ul>
         </nav>
@@ -21,11 +21,14 @@
         <div class="clear"></div>
 
         {% block content %}{% endblock %}
+    </div>
 
-        {% block footer %}
-        <div class="clear"></div>
 
-        <footer>
+    {% block footer %}
+    <div class="clear"></div>
+
+    <footer>
+        <div class="container_12">
             <ul>
                 <li><a href="{{ tagurl }}{{ start }}{{ page - 1 }}/">&lt;</a></li>
             {% for letter in footer_links() %}
@@ -33,8 +36,8 @@
             {% endfor %}
                 <li><a href="{{ tagurl }}{{ start }}{{ page + 1 }}/">&gt;</a></li>
             </ul>
-        </footer>
-        {% endblock %}
-    </div>
+        </div>
+    </footer>
+    {% endblock %}
 {% endblock %}
 </body>
