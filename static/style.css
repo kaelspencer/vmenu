@@ -46,12 +46,12 @@ nav ul li a {
     min-height: 800px;
     height: auto !important;
     height: 800px;
-    margin-bottom: -40px;
+    margin-bottom: -52px;
 }
 
 footer {
     width: 600px;
-    height: 40px;
+    height: 52px;
     margin: 0 auto;
 }
 
@@ -76,7 +76,7 @@ footer a {
     width: 100%;
 
     color: white;
-    font: bold 24px/40px 'Helvetica Neue', Helvetica, Sans-Serif;
+    font: bold 24px/52px 'Helvetica Neue', Helvetica, Sans-Serif;
     letter-spacing: -1px;
 }
 
@@ -97,11 +97,11 @@ ul.menu {
     position: relative;
     display: block;
     width: 598px;
-    height: 118px;
+    height: 116px;
     color: inherit;
     text-decoration: inherit;
     text-align: center;
-    line-height: 118px;
+    line-height: 116px;
     overflow: hidden;
 }
 
@@ -112,7 +112,7 @@ ul.menu {
 
 .menu h2 {
     position: absolute;
-    top: 18px; /* (li height - 85px) / 2 = (120 - 85) / 2 ~= 18 */
+    top: 15px; /* (li height - 85px) / 2 = (116 - 85) / 2 ~= 15 */
     width: 100%;
 }
 
