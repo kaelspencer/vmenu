@@ -19,7 +19,7 @@ def get_tags():
         tags = tracen('Evernote.note_store.listTagsByNotebook', notestore.listTagsByNotebook, notebook.guid)
 
         tags = sorted(tags, key = lambda Tag: Tag.name)
-        cache.set(key, tags)
+        cache.set(key, tags, timeout=vmenu.app.config['CACHE_TIMEOUT'])
 
     return tags
 
@@ -55,7 +55,7 @@ def get_recipes(tag):
                 results.append(result)
         trace(process_notes)
 
-        cache.set(key, results);
+        cache.set(key, results, timeout=vmenu.app.config['CACHE_TIMEOUT'])
 
     return results
 
@@ -85,7 +85,7 @@ def get_recipe(recipe):
 
         # Cache the content. The key is the MD5 hash of the server stored content
         # but the stored value in this cache has stripped out tags.
-        cache.set(key, content)
+        cache.set(key, content, timeout=vmenu.app.config['CACHE_TIMEOUT'])
 
     return { "content": content }
 

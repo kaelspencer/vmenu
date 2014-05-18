@@ -29,6 +29,7 @@ app.config.update(dict(
     CACHE_PREFIX='vmenu:', # Intentionally not including this in the default config file, since no one really needs to change it. They can, but why?
     CELERY_BROKER_URL='amqp://',
     CELERY_RESULT_BACKEND='amqp://',
+    CACHE_TIMEOUT=2592000,
 ))
 app.config.from_envvar('VMENU_SETTINGS', silent=True)
 
