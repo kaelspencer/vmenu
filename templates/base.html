@@ -6,6 +6,8 @@
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='normalize.css') }}">
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='960.css') }}">
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+
+    {% block include %}{% endblock %}
 </head>
 
 <body>

@@ -1,8 +1,20 @@
 {% extends "base.html" %}
+{% block include %}
+    <script src="/static/scroll.js"></script>
+{% endblock %}
 {% block content %}
     <article>
-        {{ recipe.content|safe }}
+        <div id="scroller">
+            {{ recipe.content|safe }}
+        </div>
     </article>
 {% endblock %}
 
-{% block footer %}{% endblock %}
+{% block footer %}
+    <footer>
+        <ul class="two-col">
+            <li><a id="scroll-up" href="">Up</a></li>
+            <li><a id="scroll-down" href="">Down</a></li>
+        </ul>
+    </footer>
+{% endblock %}

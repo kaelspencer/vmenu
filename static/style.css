@@ -5,6 +5,8 @@ body {
 /* Counteract the header overlap in the recipe. */
 article {
     margin-top: 10px;
+    height: 690px; /* 800 - 50 - 50 - 10 = 690; height - header - footer - margin-top */
+    overflow: hidden;
 }
 
 nav {
@@ -67,6 +69,10 @@ footer li {
     display: inline-block;
     list-style-type: none;
     width: 70px;
+}
+
+.two-col li {
+    width: 295px;
 }
 
 footer a {
