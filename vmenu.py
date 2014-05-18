@@ -19,17 +19,17 @@ app.url_map.converters['regex'] = RegexConverter
 
 # Load default config and override config from an environment variable
 app.config.update(dict(
-    DEBUG=True,
-    EVERNOTE_TOKEN='',
-    SANDBOX=False,
-    NOTEBOOK='',
-    NOTEIMAGES='static/noteimages/',
-    THUMBNAILS='static/thumbnails/',
-    RECIPE_IMAGES=False,
     CACHE_PREFIX='vmenu:', # Intentionally not including this in the default config file, since no one really needs to change it. They can, but why?
+    CACHE_TIMEOUT=2592000,
     CELERY_BROKER_URL='amqp://',
     CELERY_RESULT_BACKEND='amqp://',
-    CACHE_TIMEOUT=2592000,
+    DEBUG=True,
+    EVERNOTE_TOKEN='',
+    NOTEBOOK='',
+    NOTEIMAGES='static/noteimages/',
+    RECIPE_IMAGES=False,
+    SANDBOX=False,
+    THUMBNAILS='static/thumbnails/',
 ))
 app.config.from_envvar('VMENU_SETTINGS', silent=True)
 
