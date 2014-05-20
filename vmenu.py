@@ -70,23 +70,25 @@ def download_file(url, path):
     logging.info('Finished fetching file from Evernote: %s', url)
 
 @app.route('/')
+@app.route('/refresh/', defaults={'refresh': True})
 @app.route('/<regex("[a-zA-Z]{1}"):start>/')
 @app.route('/<regex("-?[0-9]*"):page>/')
 @app.route('/<regex("[a-zA-Z]{1}"):start>/<regex("-?[0-9]*"):page>/')
 @logrequest
-def show_tags(start='a', page=0):
-    tags = evernote_wrapper.get_tags()
+def show_tags(start='a', page=0, refresh=False):
+    tags = evernote_wrapper.get_tags(refresh)
     paginator = Paginator(tags, 'name', start, int(page), 6)
     start += '/'
     return render_template('tags.html', tags=paginator.page(), tagurl='/', start=start, page=int(page))
 
 @app.route('/tag/<tag>/')
+@app.route('/tag/<tag>/refresh/', defaults={'refresh': True})
 @app.route('/tag/<tag>/<regex("[a-zA-Z]{1}"):start>/')
 @app.route('/tag/<tag>/<regex("[0-9]*"):page>/')
 @app.route('/tag/<tag>/<regex("[a-zA-Z]{1}"):start>/<regex("-?[0-9]*"):page>/')
 @logrequest
-def show_recipes(tag, start='a', page=0):
-    recipes = evernote_wrapper.get_recipes(tag)
+def show_recipes(tag, start='a', page=0, refresh=False):
+    recipes = evernote_wrapper.get_recipes(tag, refresh)
     logging.info('%s recipes', len(recipes))
     paginator = Paginator(recipes, 'title', start, int(page), 6)
     tagurl = '/tag/%s/' % tag
@@ -94,10 +96,11 @@ def show_recipes(tag, start='a', page=0):
     return render_template('recipes.html', recipes=paginator.page(), tagurl=tagurl, start=start, page=int(page))
 
 @app.route('/recipe/<recipe>/')
+@app.route('/recipe/<recipe>/refresh/', defaults={'refresh': True})
 @logrequest
-def show_recipe(recipe):
-    recipe = evernote_wrapper.get_recipe(recipe)
-    return render_template('recipe.html', recipe=recipe)
+def show_recipe(recipe, refresh=False):
+    recipe = evernote_wrapper.get_recipe(recipe, refresh)
+    return render_template('recipe.html', recipe=recipe, tagurl=request.path)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

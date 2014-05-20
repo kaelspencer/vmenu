@@ -16,8 +16,6 @@ window.onload = function() {
         scroll(scroller, -1 * delta);
         return false;
     };
-
-
 };
 
 function scroll(scroller, delta) {

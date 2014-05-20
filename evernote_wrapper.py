@@ -7,12 +7,15 @@ import binascii, re, logging, vmenu
 cache = MemcachedCache(['127.0.0.1:11211'])
 
 # Get all of the tags used in the default notebook.
-def get_tags():
+def get_tags(refresh):
     key = vmenu.app.config['CACHE_PREFIX'] + 'tags'
     tags = cache.get(key)
 
-    if tags is None:
-        logging.info('Cache miss for %s', key)
+    if tags is None or refresh:
+        if refresh:
+            logging.info('Explicitly refreshing %s', key);
+        else:
+            logging.info('Cache miss for %s', key)
         client = trace(get_client)
         notestore = trace(client.get_note_store)
         notebook = trace(get_notebook, notestore, vmenu.app.config['NOTEBOOK'])
@@ -25,12 +28,15 @@ def get_tags():
 
 # Get all of the notes that are tagged with the provided tag in the default notebook.
 # Tag is a guid.
-def get_recipes(tag):
+def get_recipes(tag, refresh):
     key = vmenu.app.config['CACHE_PREFIX'] + 'recipes-' + tag
     results = cache.get(key)
 
-    if results is None:
-        logging.info('Cache miss for %s', key)
+    if results is None or refresh:
+        if refresh:
+            logging.info('Explicitly refreshing %s', key);
+        else:
+            logging.info('Cache miss for %s', key)
         client = trace(get_client)
         notestore = trace(client.get_note_store)
         notebook = trace(get_notebook, notestore, vmenu.app.config['NOTEBOOK'])
@@ -60,7 +66,7 @@ def get_recipes(tag):
     return results
 
 # Get the recipe. The parameter is a guid.
-def get_recipe(recipe):
+def get_recipe(recipe, refresh):
     client = trace(get_client)
     notestore = trace(client.get_note_store)
 
@@ -71,8 +77,11 @@ def get_recipe(recipe):
     # Check the cache for this note.
     key = '%s%s_%s' % (vmenu.app.config['CACHE_PREFIX'], binascii.hexlify(partial.contentHash), vmenu.app.config['RECIPE_IMAGES'])
     content = cache.get(key)
-    if content is None:
-        logging.info('Cache miss for %s', key)
+    if content is None or refresh:
+        if refresh:
+            logging.info('Explicitly refreshing %s', key);
+        else:
+            logging.info('Cache miss for %s', key)
         full = tracen('Evernote.note_store.getNote', notestore.getNote, recipe, True, False, False, False)
         content = strip_tags(full.content.decode('utf-8'))
 
